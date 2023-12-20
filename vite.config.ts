@@ -45,6 +45,7 @@ export default ({ mode }) => {
   return defineConfig({
     // @ts-ignore
     plugins: [vue(), basicSsl(), tailwindcss, autoprefixer],
+    base: '',
     server: {
       // @ts-ignore
       proxy: config.proxy
