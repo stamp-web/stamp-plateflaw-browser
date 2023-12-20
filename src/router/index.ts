@@ -1,13 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import ImageBrowser from '@/views/ImageBrowser.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'home',
-      component: ImageBrowser
+      component: () => import('@/views/ImageBrowser.vue')
     }
   ]
 })
