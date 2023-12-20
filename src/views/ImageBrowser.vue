@@ -74,7 +74,7 @@ onMounted(async () => {
           <input
             type="text"
             placeholder="Search by"
-            class="border ml-2 rounded p-1 text-sm"
+            class="border ml-2 rounded p-1 text-sm text-black"
             v-model="filterText"
             @change="filter()"
           />
