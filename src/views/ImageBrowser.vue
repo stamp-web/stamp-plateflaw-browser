@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import axios from 'axios'
 import { PlateFlaw } from '@/models/PlateFlaw'
 
@@ -7,6 +7,13 @@ const plateFlaws = ref(new Array<PlateFlaw>())
 const currentFlaw = ref()
 const filteredFlaws = ref(new Array<PlateFlaw>())
 const filterText = ref('')
+const imagePane = ref()
+const imageSize = ref({
+  width: 0,
+  height: 0
+})
+let observer: ResizeObserver
+
 const getListing = async () => {
   const response = await axios.get('/Pictures/Stamps/Plate%20Flaws/DDR/image-list.json', {
     headers: { Accept: 'application/json' }
@@ -32,9 +39,11 @@ const getListing = async () => {
 
 const showFlaw = (flaw: PlateFlaw) => {
   currentFlaw.value = flaw
+  calculateSize(imagePane.value)
 }
 
 const filter = () => {
+  currentFlaw.value = undefined
   filteredFlaws.value = plateFlaws.value.filter((item: PlateFlaw) => {
     return item.name.toLowerCase().includes(filterText.value.toLowerCase())
   })
@@ -45,9 +54,34 @@ const clearFilter = () => {
   filteredFlaws.value = plateFlaws.value
 }
 
+const calculateSize = async (elem: HTMLDivElement) => {
+  imageSize.value.height = Math.max(elem.clientHeight - 32, 0)
+  imageSize.value.width = elem.clientWidth
+  await nextTick()
+  const img = elem.querySelector('img') as HTMLImageElement
+  if (img) {
+    img.style['maxHeight'] = `${imageSize.value.height}px`
+    img.style['maxWidth'] = `${imageSize.value.width}px`
+  }
+}
+
+onUnmounted(() => {
+  if (observer && imagePane.value) {
+    observer.unobserve(imagePane.value)
+  }
+})
+
 onMounted(async () => {
   plateFlaws.value = await getListing()
   filteredFlaws.value = plateFlaws.value
+
+  observer = new ResizeObserver(() => {
+    if (imagePane.value) {
+      calculateSize(imagePane.value)
+    }
+  })
+  await nextTick()
+  observer.observe(imagePane.value)
 })
 </script>
 
@@ -83,7 +117,7 @@ onMounted(async () => {
           </button>
         </div>
         <div class="overflow-y-auto flex flex-col border">
-          <li v-for="flaw in filteredFlaws" :key="flaw.name" class="list-none">
+          <li v-for="flaw in filteredFlaws" :key="flaw.path" class="list-none">
             <span
               @click="showFlaw(flaw)"
               :class="`${
@@ -96,17 +130,17 @@ onMounted(async () => {
       </div>
 
       <div class="w-full flex-grow">
-        <div class="flex flex-col overflow-y-hidden w-full h-full bg-gray-900">
+        <div class="flex flex-col overflow-y-hidden w-full h-full bg-gray-900" ref="imagePane">
           <div class="bg-white p-2 text-sm hidden md:flex" v-if="currentFlaw">
             <span class="font-bold">Filepath:</span> {{ currentFlaw.path }}
           </div>
           <div class="flex min-h-[min-content] align-middle justify-center m-auto bg-transparent">
             <img
-              class="max-h-[100%] max-w-[100%]"
+              class="object-scale-down"
               v-if="currentFlaw"
               :src="`/Pictures/Stamps/Plate%20Flaws/DDR/${currentFlaw.path}`"
             />
-            <span v-if="!currentFlaw" class="text-white">No image selected</span>
+            <span v-if="!currentFlaw" class="text-white grow">No image selected</span>
           </div>
         </div>
       </div>
