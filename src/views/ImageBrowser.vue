@@ -4,7 +4,7 @@ import axios from 'axios'
 import { PlateFlaw } from '@/models/PlateFlaw'
 
 const plateFlaws = ref(new Array<PlateFlaw>())
-const currentFlaw = ref()
+const currentFlaw = ref<PlateFlaw | undefined>()
 const filteredFlaws = ref(new Array<PlateFlaw>())
 const filterText = ref('')
 const imagePane = ref()
@@ -47,6 +47,26 @@ const filter = () => {
   filteredFlaws.value = plateFlaws.value.filter((item: PlateFlaw) => {
     return item.name.toLowerCase().includes(filterText.value.toLowerCase())
   })
+}
+
+const handleKey = (event: KeyboardEvent) => {
+  const flaw = currentFlaw.value
+  let dir = 0
+  const index = filteredFlaws.value.findIndex((item) => item === flaw)
+  if (event.key === 'ArrowUp') {
+    dir = -1
+  } else if (event.key === 'ArrowDown') {
+    dir = 1
+  }
+  if (dir > 0 && index < filteredFlaws.value.length - 1) {
+    nextTick(() => {
+      showFlaw(filteredFlaws.value[index + 1])
+    })
+  } else if (dir < 0 && index > 0) {
+    nextTick(() => {
+      showFlaw(filteredFlaws.value[index - 1])
+    })
+  }
 }
 
 const clearFilter = () => {
@@ -119,6 +139,8 @@ onMounted(async () => {
         <div class="overflow-y-auto flex flex-col border">
           <li v-for="flaw in filteredFlaws" :key="flaw.path" class="list-none">
             <span
+              tabindex="-1"
+              @keyup="handleKey"
               @click="showFlaw(flaw)"
               :class="`${
                 flaw === currentFlaw ? 'font-bold bg-green-500 text-white' : ''
