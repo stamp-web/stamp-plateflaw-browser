@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type ProxyOptions, PluginOption, HttpProxy } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import fs from 'fs'
@@ -8,7 +8,12 @@ import process from 'node:process'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
-// @ts-ignore
+type CustomConfig = {
+  https?: boolean
+  proxy?: Record<string, ProxyOptions>
+  plugins: PluginOption[]
+}
+
 export default ({ mode }) => {
   const CI = !!process.env.CI
   const processEnvironment = () => {
@@ -20,10 +25,12 @@ export default ({ mode }) => {
   }
   processEnvironment()
 
-  const config = { https: true }
+  const config: CustomConfig = {
+    plugins: [vue(), basicSsl(), tailwindcss, autoprefixer] as PluginOption[],
+    https: true
+  }
 
   if (mode !== 'production' && !CI) {
-    // @ts-ignore
     config.proxy = {
       '^/Pictures': {
         target: process.env.VITE_PROXY_URL,
@@ -33,8 +40,7 @@ export default ({ mode }) => {
           cert: fs.readFileSync(process.env.VITE_SSL_CERT as string, 'utf8')
         },
         changeOrigin: true,
-        configure: (proxy: object, options: object) => {
-          // @ts-ignore
+        configure: (proxy: HttpProxy.Server, options: ProxyOptions) => {
           options.auth = `${process.env.VITE_PROXY_USER}:${process.env.VITE_PROXY_PASSWORD}`
         }
       }
@@ -43,11 +49,9 @@ export default ({ mode }) => {
 
   // https://vitejs.dev/config/
   return defineConfig({
-    // @ts-ignore
-    plugins: [vue(), basicSsl(), tailwindcss, autoprefixer],
+    plugins: config.plugins,
     base: '',
     server: {
-      // @ts-ignore
       proxy: config.proxy
     },
     resolve: {
