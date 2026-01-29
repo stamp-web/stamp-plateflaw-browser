@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 import { PlateFlaw } from '@/models/PlateFlaw'
 
 const plateFlaws = ref(new Array<PlateFlaw>())
 const currentFlaw = ref<PlateFlaw | undefined>()
-const filteredFlaws = ref(new Array<PlateFlaw>())
 const filterText = ref('')
 const imagePane = ref()
 const imageSize = ref({
   width: 0,
   height: 0
 })
+const showOnlyUnknown = ref(false)
 let observer: ResizeObserver
 
 const getListing = async () => {
@@ -42,17 +42,19 @@ const showFlaw = (flaw: PlateFlaw) => {
   calculateSize(imagePane.value)
 }
 
-const filter = () => {
-  currentFlaw.value = undefined
-  filteredFlaws.value = plateFlaws.value.filter((item: PlateFlaw) => {
-    return item.name.toLowerCase().includes(filterText.value.toLowerCase())
+const filteredFlaws = computed(() => {
+  const searchText = filterText.value.toLowerCase()
+  return plateFlaws.value.filter((item) => {
+    if (showOnlyUnknown.value && !item.isUnknown) return false
+    return item.name.toLowerCase().includes(searchText)
   })
-}
+})
 
 const handleKey = (event: KeyboardEvent) => {
   const flaw = currentFlaw.value
+  if (!flaw) return
   let dir = 0
-  const index = filteredFlaws.value.findIndex((item) => item === flaw)
+  const index = filteredFlaws.value.findIndex((item) => item.path === flaw?.path)
   if (event.key === 'ArrowUp') {
     dir = -1
   } else if (event.key === 'ArrowDown') {
@@ -71,7 +73,6 @@ const handleKey = (event: KeyboardEvent) => {
 
 const clearFilter = () => {
   filterText.value = ''
-  filteredFlaws.value = plateFlaws.value
 }
 
 const calculateSize = async (elem: HTMLDivElement) => {
@@ -93,7 +94,6 @@ onUnmounted(() => {
 
 onMounted(async () => {
   plateFlaws.value = await getListing()
-  filteredFlaws.value = plateFlaws.value
 
   observer = new ResizeObserver(() => {
     if (imagePane.value) {
@@ -130,23 +130,32 @@ onMounted(async () => {
             placeholder="Search by"
             class="border ml-2 rounded p-1 text-sm text-black"
             v-model="filterText"
-            @change="filter()"
           />
           <button @click="clearFilter()" class="p-1 px-2 bg-gray-500 text-white ml-1 rounded">
             X
           </button>
         </div>
+        <div class="mb-2">
+          <label class="ml-2 text-sm">
+            <input type="checkbox" v-model="showOnlyUnknown" />
+            Only Show Unconfirmed
+          </label>
+        </div>
         <div class="overflow-y-auto flex flex-col border">
           <li v-for="flaw in filteredFlaws" :key="flaw.path" class="list-none">
-            <span
+            <button
               tabindex="-1"
-              @keyup="handleKey"
+              @keyup="handleKey($event, flaw)"
               @click="showFlaw(flaw)"
-              :class="`${
-                flaw === currentFlaw ? 'font-bold bg-green-500 text-white' : ''
-              } hover:bg-blue-500 hover:text-white w-full flex p-2 active:bg-blue-700 text-sm`"
-              >{{ flaw.name }}</span
+              :class="[
+                'hover:bg-blue-500 hover:text-white w-full flex p-2 active:bg-blue-700 text-sm',
+                {
+                  'font-bold bg-green-500 text-white': flaw === currentFlaw
+                }
+              ]"
             >
+              {{ flaw.name }}
+            </button>
           </li>
         </div>
       </div>
