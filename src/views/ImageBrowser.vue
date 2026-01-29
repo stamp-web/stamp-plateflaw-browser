@@ -12,10 +12,13 @@ const imageSize = ref({
   height: 0
 })
 const showOnlyUnknown = ref(false)
+
+const IMAGE_ROOT = '/Pictures/Stamps/Plate%20Flaws/DDR'
+
 let observer: ResizeObserver
 
 const getListing = async () => {
-  const response = await axios.get('/Pictures/Stamps/Plate%20Flaws/DDR/image-list.json', {
+  const response = await axios.get(`${IMAGE_ROOT}/image-list.json`, {
     headers: { Accept: 'application/json' }
   })
   const data = response.data
@@ -131,8 +134,8 @@ onMounted(async () => {
             class="border ml-2 rounded p-1 text-sm text-black"
             v-model="filterText"
           />
-          <button @click="clearFilter()" class="p-1 px-2 bg-gray-500 text-white ml-1 rounded">
-            X
+          <button @click="clearFilter" class="p-1 px-2 bg-gray-500 text-white ml-1 rounded">
+            ✕
           </button>
         </div>
         <div class="mb-2">
@@ -141,11 +144,10 @@ onMounted(async () => {
             Only Show Unconfirmed
           </label>
         </div>
-        <div class="overflow-y-auto flex flex-col border">
+        <ul class="overflow-y-auto flex flex-col border p-0">
           <li v-for="flaw in filteredFlaws" :key="flaw.path" class="list-none">
             <button
-              tabindex="-1"
-              @keyup="handleKey($event, flaw)"
+              @keyup="handleKey($event)"
               @click="showFlaw(flaw)"
               :class="[
                 'hover:bg-blue-500 hover:text-white w-full flex p-2 active:bg-blue-700 text-sm',
@@ -157,7 +159,7 @@ onMounted(async () => {
               {{ flaw.name }}
             </button>
           </li>
-        </div>
+        </ul>
       </div>
 
       <div class="w-full flex-grow">
@@ -169,9 +171,9 @@ onMounted(async () => {
             <img
               class="object-scale-down"
               v-if="currentFlaw"
-              :src="`/Pictures/Stamps/Plate%20Flaws/DDR/${currentFlaw.path}`"
+              :src="`${IMAGE_ROOT}/${currentFlaw.path}`"
             />
-            <span v-if="!currentFlaw" class="text-white grow">No image selected</span>
+            <span v-if="!currentFlaw" class="text-white grow"> No image selected</span>
           </div>
         </div>
       </div>
