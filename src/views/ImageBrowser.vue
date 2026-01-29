@@ -3,7 +3,7 @@ import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 import { PlateFlaw } from '@/models/PlateFlaw'
 
-const plateFlaws = ref(new Array<PlateFlaw>())
+const plateFlaws = ref<PlateFlaw[]>([])
 const currentFlaw = ref<PlateFlaw | undefined>()
 const filterText = ref('')
 const imagePane = ref()
@@ -22,7 +22,7 @@ const getListing = async () => {
     headers: { Accept: 'application/json' }
   })
   const data = response.data
-  const values = new Array<PlateFlaw>()
+  const values: PlateFlaw[] = []
   data.forEach((s: string) => {
     values.push(PlateFlaw.fromString(s))
   })
@@ -50,7 +50,7 @@ const filteredFlaws = computed(() => {
   return plateFlaws.value.filter((item) => {
     if (showOnlyUnknown.value && !item.isUnknown) return false
     return item.name.toLowerCase().includes(searchText)
-  })
+  }) as PlateFlaw[]
 })
 
 const handleKey = (event: KeyboardEvent) => {
