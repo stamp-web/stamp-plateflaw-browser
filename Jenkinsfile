@@ -13,7 +13,7 @@ pipeline {
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
                         url: 'https://github.com/stamp-web/stamp-plateflaw-browser.git',
-                        credentialsId: 'jadrake-github'
+                        credentialsId: 'github'
                     ]]
                 ])
             }
