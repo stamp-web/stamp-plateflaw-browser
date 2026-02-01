@@ -1,6 +1,6 @@
 {
   "name": "stamp-plateflaw-browser",
-  "version": "0.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,9 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write src/"
   },
+  "files": [
+    "dist/**"
+  ],
   "dependencies": {
 
     "axios": "^1.6.2",

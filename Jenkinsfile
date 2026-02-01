@@ -31,17 +31,24 @@ pipeline {
             }
         }
 
+        stage('Package') {
+            steps {
+            sh '''
+               mkdir -p archive
+               npm pack --pack-destination archive
+               '''
+            }
+        }
+
         stage('Notify Trigger') {
             steps {
                 sh 'echo "${JOB_NAME} ${BUILD_ID}" > /tmp/build-stampweb-pf-browser.trigger'
             }
         }
     }
-
     post {
         success {
-            // archive build outputs if needed
-            archiveArtifacts artifacts: 'dist/**', fingerprint: true
+            archiveArtifacts artifacts: 'archive/*.tgz', fingerprint: true
         }
     }
 }
