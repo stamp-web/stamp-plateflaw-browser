@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
-import axios from 'axios'
 import { PlateFlaw } from '@/models/PlateFlaw'
+import { PlateFlawService } from '@/services/PlateFlawService'
 
 const plateFlaws = ref<PlateFlaw[]>([])
 const currentFlaw = ref<PlateFlaw | undefined>()
@@ -13,31 +13,24 @@ const imageSize = ref({
 })
 const showOnlyUnknown = ref(false)
 
-const IMAGE_ROOT = '/Pictures/Stamps/Plate%20Flaws/DDR'
+const collections = ref<string[]>([])
+const selectedCollection = ref('')
 
 let observer: ResizeObserver
 
-const getListing = async () => {
-  const response = await axios.get(`${IMAGE_ROOT}/image-list.json`, {
-    headers: { Accept: 'application/json' }
-  })
-  const data = response.data
-  const values: PlateFlaw[] = []
-  data.forEach((s: string) => {
-    values.push(PlateFlaw.fromString(s))
-  })
-  values.sort((a, b) => {
-    const nameA = parseInt(a.name.split(/[\s-]+/)[0])
-    const nameB = parseInt(b.name.split(/[\s-]+/)[0])
-    if (nameA < nameB) {
-      return -1
+const onCollectionChange = async () => {
+  currentFlaw.value = undefined
+  if (selectedCollection.value) {
+    try {
+      plateFlaws.value = await PlateFlawService.getListing(selectedCollection.value)
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load listing', e)
+      plateFlaws.value = []
     }
-    if (nameA > nameB) {
-      return 1
-    }
-    return 0
-  })
-  return values
+  } else {
+    plateFlaws.value = []
+  }
 }
 
 const showFlaw = (flaw: PlateFlaw) => {
@@ -96,7 +89,16 @@ onUnmounted(() => {
 })
 
 onMounted(async () => {
-  plateFlaws.value = await getListing()
+  try {
+    collections.value = await PlateFlawService.getCollections()
+    if (collections.value.length > 0) {
+      selectedCollection.value = collections.value[0]
+      plateFlaws.value = await PlateFlawService.getListing(selectedCollection.value)
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load collections', e)
+  }
 
   observer = new ResizeObserver(() => {
     if (imagePane.value) {
@@ -111,14 +113,29 @@ onMounted(async () => {
 <template>
   <div class="flew flex-col w-full overflow-y-hidden flex-grow-0">
     <div
-      class="md:h-[50px] h-[2rem] md:p-2 p-1 bg-gray-900 text-gray-100 border-b-2 border-green-500 flex align-middle"
+      class="md:h-[50px] h-[2rem] md:p-2 p-1 bg-gray-900 text-gray-100 border-b-2 border-green-500 flex justify-between items-center"
     >
-      <img
-        alt="logo"
-        class="md:w-8 md:h-8 w-6 h-6 mr-1"
-        src="../assets/images/stamp-web-64x64.png"
-      />
-      <h1 class="md:text-2xl text-md truncate">Stamp Web Editor: Plate Flaws</h1>
+      <div class="flex items-center">
+        <img
+          alt="logo"
+          class="md:w-8 md:h-8 w-6 h-6 mr-1"
+          src="../assets/images/stamp-web-64x64.png"
+        />
+        <h1 class="md:text-2xl text-md truncate">Stamp Web Editor: Plate Flaws</h1>
+      </div>
+      <div class="flex items-center text-sm mr-2">
+        <label for="collection-select" class="mr-2 text-gray-300">Context:</label>
+        <select
+          id="collection-select"
+          v-model="selectedCollection"
+          @change="onCollectionChange"
+          class="bg-gray-800 text-white rounded p-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+        >
+          <option v-for="col in collections" :key="col" :value="col">
+            {{ col }}
+          </option>
+        </select>
+      </div>
     </div>
     <div
       class="flex md:flex-row flex-col absolute md:top-[50px] top-[2rem] right-0 left-0 bottom-0 p-2"
@@ -171,7 +188,7 @@ onMounted(async () => {
             <img
               class="object-scale-down"
               v-if="currentFlaw"
-              :src="`${IMAGE_ROOT}/${currentFlaw.path}`"
+              :src="PlateFlawService.getImageUrl(selectedCollection, currentFlaw.path)"
             />
             <span v-if="!currentFlaw" class="text-white grow"> No image selected</span>
           </div>

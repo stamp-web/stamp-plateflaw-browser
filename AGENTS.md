@@ -60,6 +60,7 @@
 - Run `npm run lint` before submitting changes to ensure code conforms to ESLint rules
 - Add TypeScript types for all new functions and interfaces
 - Follow existing patterns in the file you're editing
+- If asked to generate a plan put it in a folder `plans` at the project root.
 - Whenever a request is made, evaluate if there are additional instructions, patterns, or notes to add to `AGENTS.md`
 
 ### Ask First

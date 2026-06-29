@@ -30,3 +30,4 @@ coverage
 *.tsbuildinfo
 /.env.development
 /stamp-plateflaw-browser-*.tgz
+/plans
