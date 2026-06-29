@@ -25,6 +25,12 @@ pipeline {
             }
         }
 
+        stage('Unit Tests') {
+            steps {
+                sh 'npm run test:unit -- --run'
+            }
+        }
+
         stage('Build') {
             steps {
                 sh 'npm run build'
