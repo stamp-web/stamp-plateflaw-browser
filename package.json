@@ -34,7 +34,6 @@
     "@vue/eslint-config-typescript": "^14.5.1",
     "@vue/tsconfig": "^0.5.1",
     "autoprefixer": "^10.4.19",
-    "baseline-browser-mapping": "^2.10.40",
     "eslint": "^9.19.0",
     "eslint-plugin-vue": "^10.3.0",
     "jsdom": "^24.1.0",
@@ -46,5 +45,8 @@
     "vite": "^6.3.5",
     "vitest": "^4.1.9",
     "vue-tsc": "^3.0.3"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
   }
 }
