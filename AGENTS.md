@@ -11,7 +11,7 @@
 - **Stack:** Vue.js 3.x, TypeScript 5.2.2, Tailwind CSS 3.3.5, See package.json for full list of
   dependencies.
 - **Package manager:** npm
-- **Node version:** 22.x
+- **Node version:** 22.x (>= 22.22.2) or 24.x (>= 24.15.0)
 - **State Management:** None
 
 ## Project Structure
